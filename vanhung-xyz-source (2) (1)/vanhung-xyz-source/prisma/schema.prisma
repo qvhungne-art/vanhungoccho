@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  CTV
+  ADMIN
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  username     String        @unique
+  email        String        @unique
+  passwordHash String
+  role         Role          @default(USER)
+  balance      Int           @default(0)
+  totalDeposit Int           @default(0)
+  depositCode  String        @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  orders       Order[]
+  transactions Transaction[]
+}
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  cat       String
+  name      String
+  price     Int
+  stock     Int      @default(0)
+  badge     String   @default("")
+  country   String   @default("VN")
+  warranty  String   @default("24h Login")
+  format    String   @default("user|pass|2fa")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model Order {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  userId    Int
+  productId Int
+  qty       Int
+  total     Int
+  data      String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Transaction {
+  id        Int      @id @default(autoincrement())
+  sepayId   String   @unique
+  userId    Int
+  amount    Int
+  content   String
+  gateway   String   @default("SEPAY")
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
